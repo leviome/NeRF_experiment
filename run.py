@@ -134,9 +134,6 @@ def _main():
     print('Loaded blender', images.shape, render_poses.shape, hwf, args.datadir)
     i_train, i_val, i_test = i_split
 
-    near = 2.
-    far = 6.
-
     # bkg
     images = images[..., :3] * images[..., -1:] + (1. - images[..., -1:])
 
@@ -165,7 +162,7 @@ def _main():
         ckpts = [args.ft_path]
     else:
         ckpts = [os.path.join(basedir, expname, f) for f in sorted(os.listdir(os.path.join(basedir, expname))) if
-                 'tar' in f]
+                 'tar' in str(f)]
 
     print('Found ckpts', ckpts)
     if len(ckpts) > 0 and not args.no_reload:
@@ -180,15 +177,7 @@ def _main():
         comp.net.load_state_dict(ckpt['network_fn_state_dict'])
         comp.net_fine.load_state_dict(ckpt['network_fine_state_dict'])
 
-    render_kwargs_train = {'white_bkgd': True,
-                           'raw_noise_std': 0.0, 'ndc': False,
-                           'near': near, 'far': far}
-
     # NDC only good for LLFF-style forward facing data
-
-    # render_kwargs_test = {k: render_kwargs_train[k] for k in render_kwargs_train}
-    # render_kwargs_test['perturb'] = False
-    # render_kwargs_test['raw_noise_std'] = 0.
 
     if args.render_only:
         print('RENDER ONLY')

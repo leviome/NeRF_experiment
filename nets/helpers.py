@@ -350,3 +350,11 @@ class Comp:
         ret_list = [all_ret[k] for k in k_extract]
         ret_dict = {k: all_ret[k] for k in all_ret if k not in k_extract}
         return ret_list + [ret_dict]
+
+    def render_from_camera_pose(self, H, W, K, c2w, chunk=1024 * 32, save_name=None):
+        with torch.no_grad():
+            rgb, _, _, _ = self.render(H, W, K, chunk=chunk, c2w=c2w[:3, :4])
+        rgb8 = to8b(rgb.cpu().numpy())
+        if save_name is not None:
+            imageio.imwrite(save_name, rgb8)
+        return rgb8

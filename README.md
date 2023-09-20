@@ -40,15 +40,19 @@ to render a spherical path:
 ```commandline
 python run.py --config configs/lego.txt --render_only
 ```
-<img src='assets/theta.gif'/>
-<img src='assets/phi.gif'/>
+<figure>
+<img src='assets/theta.gif' height=200/><img src='assets/phi.gif' height=200/>
+</figure>
 
 to render a view by the view direction and the sphere radius
 ```commandline
 python run.py --config configs/lego.txt --render_a_view --render_params 66,-15,5
 ```
 and you will get a result 'test.png':
-<img src='assets/view_direction_render.png'>
+
+<figure>
+<img src='assets/view_direction_render.png' width="200">
+</figure>
 
 ## Citation
 

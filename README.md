@@ -3,9 +3,9 @@
 Explicit PyTorch implementation of NeRF
 
 ## Movement Demo
-|                  <h2 align="center"> T0 </h2>                   |             <h2 align="center"> T1 </h2>              |             <h2 align="center"> T2 </h2>             |
-|:---------------------------------------------------------------:|:-----------------------------------------------------:|:----------------------------------------------------:|
-|      <img src='assets/r1.gif' alt="drawing" height=200 />       | <img src='assets/r2.gif' alt="drawing" height=200 /> | <img src='assets/r3.gif' alt="drawing" height=200 /> |
+|       <h3 align="center"> move to right </h3>        |          <h3 align="center"> move in </h3>           |          <h3 align="center"> move up </h3>           |
+|:----------------------------------------------------:|:----------------------------------------------------:|:----------------------------------------------------:|
+| <img src='assets/r1.gif' alt="drawing" height=200 /> | <img src='assets/r2.gif' alt="drawing" height=200 /> | <img src='assets/r3.gif' alt="drawing" height=200 /> |
 
 ## Method
 
@@ -27,25 +27,7 @@ Explicit PyTorch implementation of NeRF
 
 ### Data Preparation
 
-To play with other scenes presented in the paper, download the
-data [here](https://drive.google.com/drive/folders/128yBriW1IG_3NJ5Rp7APSTZsJqdJdfc1). Place the downloaded dataset
-according to the following directory structure:
-
-```
-├── configs                                                                                                       
-│   ├── ...                                                                                     
-│                                                                                               
-├── data                                                                                                                                                                                                       
-│   ├── nerf_llff_data                                                                                                  
-│   │   └── fern                                                                                                                             
-│   │   └── flower  # downloaded llff dataset                                                                                  
-│   │   └── horns   # downloaded llff dataset
-|   |   └── ...
-|   ├── nerf_synthetic
-|   |   └── lego
-|   |   └── ship    # downloaded synthetic dataset
-|   |   └── ...
-```
+see [data/data_preparation.md](data/data_preparation.md)
 
 ### Train
 

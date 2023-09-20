@@ -6,8 +6,8 @@ import numpy as np
 import torch
 from tqdm import tqdm, trange
 
-from dataloader import load_blender_data, pose_spherical
-from nets.helpers import NeRFWrapper, get_rays, img2mse, mse2psnr, to8b, render_path
+from nerf.dataloader import load_blender_data, pose_spherical
+from nerf.helpers import NeRFWrapper, get_rays, img2mse, mse2psnr, to8b, render_path
 
 os.environ["CUDA_VISIBLE_DEVICES"] = "2"  # choose a GPU
 

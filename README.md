@@ -3,9 +3,9 @@
 Explicit PyTorch implementation of NeRF
 
 ## Movement Demo
-|                   <h2 align="center"> T0 </h2>                   |             <h2 align="center"> T1 </h2>              |             <h2 align="center"> T2 </h2>              |
-|:----------------------------------------------------------------:|:-----------------------------------------------------:|:-----------------------------------------------------:|
-| <img src='assets/r1.gif'/ alt="drawing" height=200 /> | <img src='assets/r2.gif'/ alt="drawing" height=200 /> | <img src='assets/r3.gif'/ alt="drawing" height=200 /> |
+|                  <h2 align="center"> T0 </h2>                   |             <h2 align="center"> T1 </h2>              |             <h2 align="center"> T2 </h2>             |
+|:---------------------------------------------------------------:|:-----------------------------------------------------:|:----------------------------------------------------:|
+|      <img src='assets/r1.gif' alt="drawing" height=200 />       | <img src='assets/r2.gif' alt="drawing" height=200 /> | <img src='assets/r3.gif' alt="drawing" height=200 /> |
 
 ## Method
 

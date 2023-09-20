@@ -2,6 +2,11 @@
 
 Explicit PyTorch implementation of NeRF
 
+## Movement Demo
+|                   <h2 align="center"> T0 </h2>                   |             <h2 align="center"> T1 </h2>              |             <h2 align="center"> T2 </h2>              |
+|:----------------------------------------------------------------:|:-----------------------------------------------------:|:-----------------------------------------------------:|
+| <img src='assets/r1.gif'/ alt="drawing" height=200 /> | <img src='assets/r2.gif'/ alt="drawing" height=200 /> | <img src='assets/r3.gif'/ alt="drawing" height=200 /> |
+
 ## Method
 
 [NeRF: Representing Scenes as Neural Radiance Fields for View Synthesis](http://tancik.com/nerf)  
@@ -49,10 +54,19 @@ python run.py --config configs/lego.txt
 ```
 
 ### Render
-
+to render a spherical path:
 ```commandline
 python run.py --config configs/lego.txt --render_only
 ```
+<img src='assets/theta.gif'/>
+<img src='assets/phi.gif'/>
+
+to render a view by the view direction and the sphere radius
+```commandline
+python run.py --config configs/lego.txt --render_a_view --render_params 66,-15,5
+```
+and you will get a result 'test.png':
+<img src='assets/view_direction_render.png'>
 
 ## Citation
 

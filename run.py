@@ -6,8 +6,8 @@ import numpy as np
 import torch
 from tqdm import tqdm, trange
 
-from dataloader import load_blender_data
-from helpers import Comp, get_rays, img2mse, mse2psnr, to8b, render_path
+from dataloader import load_blender_data, pose_spherical
+from nets.helpers import NeRFWrapper, get_rays, img2mse, mse2psnr, to8b, render_path
 
 os.environ["CUDA_VISIBLE_DEVICES"] = "2"  # choose a GPU
 
@@ -69,6 +69,10 @@ def config_parser():
 
     parser.add_argument("--render_only", action='store_true',
                         help='do not optimize, reload weights and render out render_poses path')
+    parser.add_argument("--render_a_view", action='store_true',
+                        help='render an arbitrary spherical view by input theta, phi and radius')
+    parser.add_argument("--render_params", type=str, default="66,-15,5",
+                        help='theta,phi,radius')
     parser.add_argument("--render_test", action='store_true',
                         help='render the test set instead of render_poses path')
     parser.add_argument("--render_factor", type=int, default=0,
@@ -150,12 +154,7 @@ def _main():
     os.makedirs(os.path.join(basedir, expname), exist_ok=True)
 
     # Create nerf model
-    comp = Comp(device)
-    grad_vars = list(comp.net.parameters())
-    grad_vars += list(comp.net_fine.parameters())
-    optimizer = torch.optim.Adam(params=grad_vars, lr=args.lrate, betas=(0.9, 0.999))
-
-    start = 0
+    comp = NeRFWrapper(device, initial_lr=args.lrate)
 
     # Load checkpoints
     if args.ft_path is not None and args.ft_path != 'None':
@@ -168,20 +167,24 @@ def _main():
     if len(ckpts) > 0 and not args.no_reload:
         ckpt_path = ckpts[-1]
         print('Reloading from', ckpt_path)
-        ckpt = torch.load(ckpt_path)
+        comp.load_checkpoint(ckpt_path=ckpt_path)
 
-        start = ckpt['global_step']
-        optimizer.load_state_dict(ckpt['optimizer_state_dict'])
-
-        # Load model
-        comp.net.load_state_dict(ckpt['network_fn_state_dict'])
-        comp.net_fine.load_state_dict(ckpt['network_fine_state_dict'])
+    if args.render_a_view:
+        try:
+            theta, phi, radius = [float(s) for s in args.render_params.split(",")]
+        except ValueError:
+            print("Please input right params with format of 'theta,phi,radius'!")
+            return
+        pose = pose_spherical(theta=theta, phi=phi, radius=radius)
+        comp.render_from_camera_pose(h, w, K, c2w=pose, chunk=args.chunk, save_name="test.png")
+        return
 
     # NDC only good for LLFF-style forward facing data
 
     if args.render_only:
         print('RENDER ONLY')
         with torch.no_grad():
+
             if args.render_test:
                 # render_test switches to test poses
                 images = images[i_test]
@@ -190,7 +193,7 @@ def _main():
                 images = None
 
             testsavedir = os.path.join(basedir, expname,
-                                       'renderonly_{}_{:06d}'.format('test' if args.render_test else 'path', start))
+                                       'phi_{}_{:06d}'.format('test' if args.render_test else 'path', comp.start))
             os.makedirs(testsavedir, exist_ok=True)
             print('test poses shape', render_poses.shape)
 
@@ -202,7 +205,7 @@ def _main():
             return
 
     # return render_kwargs_train, render_kwargs_test, start, grad_vars, optimizer
-    global_step = start
+    global_step = comp.start
 
     # Move testing data to GPU
     render_poses = torch.Tensor(render_poses).to(device)
@@ -219,7 +222,7 @@ def _main():
     print('TEST views are', i_test)
     print('VAL views are', i_val)
 
-    start = start + 1
+    start = comp.start + 1
     # print(render_kwargs_train)
     for i in trange(start, iters):
         # Random from one image
@@ -248,7 +251,7 @@ def _main():
         #  Core optimization loop
         rgb, disp, acc, extras = comp.render(h, w, K, chunk=32768, rays=batch_rays)
 
-        optimizer.zero_grad()
+        comp.optimizer.zero_grad()
         img_loss = img2mse(rgb, target_s)
         loss = img_loss
         psnr = mse2psnr(img_loss)
@@ -258,7 +261,7 @@ def _main():
             loss = loss + img_loss0
 
         loss.backward()
-        optimizer.step()
+        comp.optimizer.step()
 
         if i % args.i_print == 0:
             tqdm.write(f"[TRAIN] Iter: {i} Loss: {loss.item()}  PSNR: {psnr.item()}")
@@ -268,7 +271,7 @@ def _main():
         decay_rate = 0.1
         decay_steps = args.lrate_decay * 1000
         new_lrate = args.lrate * (decay_rate ** (global_step / decay_steps))
-        for param_group in optimizer.param_groups:
+        for param_group in comp.optimizer.param_groups:
             param_group['lr'] = new_lrate
 
         # Rest is logging
@@ -278,7 +281,7 @@ def _main():
                 'global_step': global_step,
                 'network_fn_state_dict': comp.net.state_dict(),
                 'network_fine_state_dict': comp.net_fine.state_dict(),
-                'optimizer_state_dict': optimizer.state_dict(),
+                'optimizer_state_dict': comp.optimizer.state_dict(),
             }, path)
             print('Saved checkpoints at', path)
 

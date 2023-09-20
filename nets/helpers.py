@@ -194,8 +194,8 @@ def render_path(comp, render_poses, hwf, K, chunk, gt_imgs=None, savedir=None, r
     return rgbs, disps
 
 
-class Comp:
-    def __init__(self, device):
+class NeRFWrapper:
+    def __init__(self, device, initial_lr=0.005):
         self.embedder = Embedder(10)
         self.embedder_dir = Embedder(4)
         input_ch = self.embedder.out_dim
@@ -208,6 +208,11 @@ class Comp:
                              input_ch=input_ch, output_ch=5, skips=[4],
                              input_ch_views=input_ch_views, use_viewdirs=True).to(device)
 
+        grad_vars = list(self.net.parameters())
+        grad_vars += list(self.net_fine.parameters())
+        self.optimizer = torch.optim.Adam(params=grad_vars, lr=initial_lr, betas=(0.9, 0.999))
+        self.start = 0
+
         self.N_samples = 64
         self.N_importance = 128
         self.perturb = 1.0
@@ -217,6 +222,15 @@ class Comp:
         self.lindisp = False
         self.near = 2.0
         self.far = 6.0
+
+    def load_checkpoint(self, ckpt_path):
+        ckpt = torch.load(ckpt_path)
+        self.start = ckpt['global_step']
+        self.optimizer.load_state_dict(ckpt['optimizer_state_dict'])
+
+        # Load model
+        self.net.load_state_dict(ckpt['network_fn_state_dict'])
+        self.net_fine.load_state_dict(ckpt['network_fine_state_dict'])
 
     def func(self, inputs, viewdirs, use_fine=False):
         inputs_flat = torch.reshape(inputs, [-1, inputs.shape[-1]])
